@@ -1,26 +1,35 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <router-view/>
+
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-
 export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  }
+  
 }
-</script>
+// app.vue写在script里面  main.js写在app挂在完之后
+const debounce = (fn, delay) => {
+  let timer
+   return (...args) => {
+     if (timer) {
+       clearTimeout(timer)
+     }
+     timer = setTimeout(() => {
+       fn(...args)
+     }, delay)
+   }
+}
+  
+const _ResizeObserver = window.ResizeObserver;
+window.ResizeObserver = class ResizeObserver extends _ResizeObserver{
+   constructor(callback) {
+     callback = debounce(callback, 200);
+     super(callback);
+   }
+}
 
+</script>
+  
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+
 </style>

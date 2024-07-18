@@ -1,0 +1,273 @@
+/* -----------------登录-注册--------------------- */
+#backcont {
+	background-image: url(../static/cover.jpg);
+	/* background-color: rgb(164, 154, 192); */
+	background-attachment: fixed;
+	background-repeat: no-repeat;
+	background-size: cover;
+	-webkit-background-size: cover;
+	moz-background-size: cover;
+	min-height: 100vh;
+}
+
+.meituan-content {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.login-cont {
+	width: 500px;
+	height: 300px;
+	background: #f9de80;
+	border-radius: 5px;
+}
+
+.meituan-title {
+	text-align: center;
+	color: #000000;
+	font-size: 30px;
+	padding-top: 30px;
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+.meituan-user {
+	width: 400px;
+	margin: 0 auto;
+	padding-top: 30px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+}
+
+.meituan-user p {
+	width: 50px;
+	color: #000000;
+	font-size: 16px;
+}
+
+.inptflex {
+	flex: 1;
+}
+
+.reg-view {
+	width: 400px;
+	display: flex;
+	justify-content: flex-end;
+	margin: 0 auto;
+	padding-top: 10px;
+}
+
+.reg-view p {
+	cursor: pointer;
+	display: contents;
+}
+
+.meituan-btn {
+	width: 200px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 10px auto 0 auto;
+	font-size: 16px;
+}
+
+/* -------------------侧边菜单栏------------------ */
+.sidebar-top {
+	width: 100%;
+	background: #FFFFFF;
+	height: 50px;
+	color: #333333;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 50;
+}
+
+.sidebar-top div:nth-child(1) {
+	padding-left: 22px;
+	font-size: 18px;
+}
+
+.sidebar-top div:nth-child(2) {
+	padding-right: 22px;
+	cursor: pointer;
+}
+
+.sidebar-cont {
+	position: fixed;
+	top: 50px;
+	left: 0;
+	bottom: 50px;
+	background: #FFFFFF;
+	width: 200px;
+	height: 100vh;
+	color: #000000 !important;
+	font-size: 16px;
+	overflow-y: auto;
+}
+
+/* --------------------主页定位-------------------- */
+.ordering {
+	position: absolute;
+	top: 50px;
+	left: 200px;
+	right: 0;
+	padding: 10px 0;
+	margin: 0 auto;
+	max-width: 1400px;
+}
+
+/* -----------------------标题----------------------- */
+.heading {
+	font-size: 20px;
+	font-weight: bold;
+	margin-bottom: 30px;
+}
+
+/* ------------------------分页---------------------- */
+.el-pagination {
+	text-align: center;
+	margin: 30px 0;
+}
+
+/* -----------------------查询组件，flex--------------*/
+.query-view {
+	display: flex;
+	align-items: center;
+	margin-bottom: 30px;
+	flex-wrap: wrap;
+}
+
+.quotation-query {
+	display: flex;
+	align-items: center;
+	margin-right: 15px;
+}
+
+.quotation-title {
+	margin-right: 10px;
+}
+
+/* -----------------------订单页面的弹窗----------------------- */
+.menu-padd {
+	border-bottom: 1px solid #f8f8f8;
+}
+
+.Menu-details {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 50px;
+}
+
+.menu-margin {
+	margin: 20px 0;
+}
+
+.menu-span {
+	font-weight: bold;
+	font-size: 15px;
+	padding-top: 20px;
+}
+
+/* ----------------------菜品管理：添加菜品 -------------------*/
+.button-view {
+	display: flex;
+	justify-content: flex-end;
+	margin-bottom: 30px;
+}
+
+
+/* ----------------------upload上传界面-------------------------- */
+.content-view-ten {
+	margin-top: 30px;
+	background-color: #FFFFFF;
+	padding: 10px;
+}
+
+.image-view-title {
+	max-width: 800px;
+	margin: 0 auto 30px auto;
+}
+
+.image-list {
+	margin-bottom: 20px;
+}
+
+.sub-button {
+	text-align: center;
+	margin: 120px 0;
+}
+
+
+/* ------------------------没有数据的提示------------------------ */
+.nodatas {
+	text-align: center;
+	color: #999;
+	padding-top: 200px;
+}
+
+/* ------------------------全局响应式------------------------------*/
+/* 大于1700 */
+@media screen and (min-width: 1700px) {
+	.ordering {
+		max-width: 1400px;
+	}
+}
+
+/* 小于1700 */
+@media screen and (max-width: 1700px) {
+	.ordering {
+		max-width: 1300px;
+	}
+}
+
+@media screen and (max-width: 1650px) {
+	.ordering {
+		max-width: 1200px;
+	}
+}
+
+@media screen and (max-width: 1550px) {
+	.ordering {
+		max-width: 1100px;
+	}
+}
+
+@media screen and (max-width: 1430px) {
+	.ordering {
+		max-width: 1000px;
+	}
+}
+
+@media screen and (max-width: 1300px) {
+	.ordering {
+		max-width: 900px;
+	}
+}
+
+@media screen and (max-width: 1200px) {
+	.ordering {
+		max-width: 850px;
+	}
+}
+
+@media screen and (max-width: 1130px) {
+	.ordering {
+		max-width: 800px;
+	}
+}
+
+/* -----------------菜品界面的编辑和下架按钮------------------ */
+@media screen and (max-width: 1201px) {
+	.modify-button .el-button+.el-button {
+		margin-left: 0px;
+		margin-top: 10px;
+	}
+}
