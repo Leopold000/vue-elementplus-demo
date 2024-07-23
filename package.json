@@ -1,5 +1,5 @@
 {
-  "name": "vue3-element",
+  "name": "turbine-platform",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -14,8 +14,10 @@
     "core-js": "^3.8.3",
     "element-plus": "^2.7.7",
     "js-base64": "^3.7.7",
+    "mockjs": "^1.1.0",
     "normalize.css": "^8.0.1",
     "pinia": "^2.1.7",
+    "qs": "^6.12.3",
     "vue": "^3.2.13",
     "vue-router": "^4.4.0"
   },

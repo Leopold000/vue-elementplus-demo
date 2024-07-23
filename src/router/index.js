@@ -10,38 +10,43 @@ const routes = [
         path:'/index',
         name:'index',
         component:()=>import(/*webpackChunkName:'Index'*/ '@/page/index/index.vue'),
-        redirect:'/data',
+        redirect:'/daq',
         //二级路由
         children:[
-            {//用户列表
-                path:'/userpage',
-                name:'userpage',
-                component:()=>import(/*webpackChunkName:'Userpage'*/ '@/page/user-page/user.vue')
+            {//工况数据采集
+                path:'/daq',
+                name:'daq',
+                component:()=>import(/*webpackChunkName:'DAQ'*/ '@/page/DAQ/daq.vue')
             },
-            {//订单管理
-                path:'/order',
-                name:'order',
-                component:()=>import(/*webpackChunkName:'Order'*/ '@/page/order/order.vue')
-            },
-            {//菜品管理
-                path:'/dishes',
-                name:'dishes',
-                component:()=>import(/*webpackChunkName:'Dishes'*/ '@/page/dishes/dishes.vue')
-            },
-            {//菜品管理：上传菜品
-                path:'/upload',
-                name:'upload',
-                component:()=>import(/*webpackChunkName:'Upload'*/ '@/page/dishes-upload/upload.vue')
-            },
-            {//员工详情
-                path:'/role',
-                name:'role',
-                component:()=>import(/*webpackChunkName:'Role'*/ '@/page/role-manage/role.vue')
-            },
-            {//数据分析
+            {//寿命与损伤分析
                 path:'/data',
                 name:'data',
                 component:()=>import(/*webpackChunkName:'Data'*/ '@/page/data-analysis/data.vue')
+            },
+            {//系统实时监测
+                path:'/system',
+                name:'system',
+                component:()=>import(/*webpackChunkName:'System'*/ '@/page/SystemMonitor/system.vue')
+            },
+            {//重要部件监测
+                path:'/disk',
+                name:'disk',
+                component:()=>import(/*webpackChunkName:'Disk'*/ '@/page/ImportantCom/disk.vue')
+            },
+            {//重要部件监测
+                path:'/combustion',
+                name:'combustion',
+                component:()=>import(/*webpackChunkName:'Combustion'*/ '@/page/ImportantCom/combustion.vue')
+            },
+            {//运维数据库
+                path:'/omdatabase',
+                name:'omdatabase',
+                component:()=>import(/*webpackChunkName:'OMDatabase'*/ '@/page/OMdatabase/omdb.vue')
+            },
+            {//设计数据库
+                path:'/designdb',
+                name:'designdb',
+                component:()=>import(/*webpackChunkName:'DesignDatabase'*/ '@/page/DesignDB/designdb.vue')
             },
         ]
 

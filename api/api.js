@@ -1,6 +1,8 @@
 //放置所有的请求接口地址
 
-const url = 'https://meituan.thexxdd.cn/apit/'
+// const url = 'https://meituan.thexxdd.cn/apit/'
+    const url = '/'
+
 
 const urls = class{
     static m(){
@@ -8,6 +10,8 @@ const urls = class{
         const register = `${url}register`
         //登陆接口
         const login = `${url}login`
+        //用户信息
+        const userInfo = `${url}userInfo`
         //用户列表
         const pulluserlist = `${url}pulluserlist`
         //获取桌号
@@ -44,10 +48,12 @@ const urls = class{
         const analysis = `${url}analysis`
         //折线图的更新数据
         const switchcate = `${url}switchcate`
+
       
         return{
             register,
             login,
+            userInfo,
             pulluserlist,
             gettable,
             obtainorder,
@@ -66,6 +72,7 @@ const urls = class{
             deleteemp,
             analysis,
             switchcate
+            
         }
     }
 }

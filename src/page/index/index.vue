@@ -2,8 +2,33 @@
     <div>
         <!-- 顶部 -->
          <div class="sidebar-top">
-            <div>后台管理</div>
-            <div @click="Logout">退出</div>
+            <div>
+                <el-icon :size="30">
+                    <Platform />
+                </el-icon>
+                <span>燃机关重部件管理平台</span>
+            </div>
+            <!-- <div @click="Logout">退出</div> -->
+            <div class="header-avatar">
+
+                <el-avatar size="medium" >A</el-avatar>
+
+                <el-dropdown>
+                    <span class="el-dropdown-link">
+						Admin<el-icon class="el-icon--right"><arrow-down /></el-icon>
+					</span>
+                <template #dropdown>
+                    <el-dropdown-menu>
+                    <el-dropdown-item>
+                        <el-icon ><UserFilled /></el-icon>
+                        <router-link :to="{name:'daq'}">个人中心</router-link>
+                    </el-dropdown-item>
+                    <el-dropdown-item @click="Logout">
+                        <el-icon ><SwitchButton /></el-icon>退出登录</el-dropdown-item>
+                    </el-dropdown-menu>
+                </template>
+                </el-dropdown>
+                </div>
          </div>
          <!-- 侧边栏 -->
          <div class="sidebar-cont">
@@ -40,62 +65,73 @@
 </template>
 
 <script>
-import { Histogram,UserFilled,CreditCard,Food,User } from '@element-plus/icons-vue';
+import { Histogram,DataLine,Tools,Monitor,Platform,ArrowDown,Memo,Share,SwitchButton,UserFilled  } from '@element-plus/icons-vue';
 import { reactive, ref,onMounted } from 'vue';
 import { useRouter  } from 'vue-router';
+
 export default{
     components:{
-        Histogram,UserFilled,CreditCard,Food,User
+        Histogram,DataLine,Tools,Monitor,Platform,ArrowDown,Memo,Share,SwitchButton,UserFilled
     },
     setup(){
         const router = useRouter()
+       
         const Array = [
             {
                 id:'1',
-                icon:'Histogram',
-                title:'数据分析',
-                router:'data',
+                icon:'DataLine',
+                title:'工况数据采集',
+                router:'daq',
                 Subclass:[]//是否有二级三级菜单
+                
             },
             {
                 id:'2',
-                icon:'UserFilled',
-                title:'用户列表',
-                router:'userpage',
+                icon:'Monitor',
+                title:'系统实时监测',
+                router:'system',
                 Subclass:[]//是否有二级三级菜单
             },
             {
                 id:'3',
-                icon:'CreditCard',
-                title:'订单管理',
-                router:'order',
-                Subclass:[]//是否有二级三级菜单
+                icon:'Tools',
+                title:'重要部件监测',
+                router:'',
+                Subclass:[
+                    {
+                        id:'3-1',
+                        title:'燃烧室',
+                        router:'combustion',
+                    },
+                    {
+                        id:'3-2',
+                        title:'涡轮盘',
+                        router:'disk',
+                    },
+                ]//是否有二级三级菜单
             },
             {
                 id:'4',
-                icon:'Food',
-                title:'菜品管理',
-                router:'dishes',
+                icon:'Histogram',
+                title:'寿命与损伤分析',
+                router:'data',
                 Subclass:[]//是否有二级三级菜单
             },
             {
                 id:'5',
-                icon:'User',
-                title:'员工管理',
-                router:'',
-                Subclass:[
-                    {
-                        id:'5-1',
-                        title:'员工详情',
-                        router:'role',
-                    },
-                    {
-                        id:'5-2',
-                        title:'员工管理',
-                        router:'',
-                    },
-                ]//是否有二级三级菜单
+                icon:'Memo',
+                title:'运维数据库',
+                router:'omdatabase',
+                Subclass:[]//是否有二级三级菜单
             },
+            {
+                id:'6',
+                icon:'Share',
+                title:'设计平台',
+                router:'designdb',
+                Subclass:[]//是否有二级三级菜单
+            },
+            
         ]
 
         const menu = reactive(Array)
@@ -108,7 +144,10 @@ export default{
         }
         onMounted(()=>{
             ac_index.value = JSON.parse(localStorage.getItem('menuid'))//刷新之后保留页面id
+        
         })
+
+       
 
         //退出登录
        function Logout(){

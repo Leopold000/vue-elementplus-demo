@@ -2,7 +2,7 @@
     <div id="backcont">
         <div class="meituan-content">
             <div class="login-cont ">
-                  <div class="meituan-title">客户端</div>
+                  <div class="meituan-title">燃机寿命管理平台</div>
                   <div class="meituan-user">
                     <p>账号</p>
                     <el-input clearable v-model="account" class="inptflex" placeholder="请输入账号" />
@@ -29,8 +29,10 @@
 import { reactive, toRefs,getCurrentInstance } from 'vue';
 import { useRouter} from 'vue-router'
 
+
 export default{
     setup(){
+ 
        const {proxy} = getCurrentInstance()
        const router = useRouter()
        const user = reactive({
@@ -46,17 +48,23 @@ export default{
           try{
             const res = await new proxy.$request(proxy.$urls.m().login,obj).modepost()
             console.log(res)
-            if(res.status != 200){
-              new proxy.$tips(res.data.msg,'warning').mess_age()
-            }else{
+            console.log(res.status)
+           
+            if(res.status == 200){
               //跳转到内容页面
               let ids = '1'
+              
               localStorage.setItem('token',res.data.data.token)//保存token
               localStorage.setItem('menuid',ids)//页面默认选中第一页
               router.push({name:'index'})
+              
+              
+            }else{
+              new proxy.$tips(res.data.msg,'warning').mess_age()
             }
             user.load = false
           }catch(e){
+            
             new proxy.$tips('服务器发生错误','error').mess_age()
             user.load = false
           }
@@ -83,6 +91,7 @@ export default{
           }
           
        }
+       
 
        return { ...toRefs(user),signin,register}
     }

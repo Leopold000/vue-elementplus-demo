@@ -26,5 +26,8 @@ app.config.globalProperties.$request = request
 import tips from '../config/Tips'
 app.config.globalProperties.$tips = tips
 
+//mock引入
+import "@/mockjs/index"
+
 app.use(pinia)
 app.mount('#app')

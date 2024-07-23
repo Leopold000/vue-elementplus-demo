@@ -1,5 +1,6 @@
 <template>
-    <div class="ordering" v-loading.fullscreen.lock="Loading">
+    <!-- v-loading.fullscreen.lock="Loading" -->
+    <div class="ordering" >
         <div class="heading">数据分析</div>
         <div>
             <First :pieChart="pieChart" :hisTogram="hisTogram"></First>
@@ -33,7 +34,7 @@ export default{
         async function get_data(){
             try{
                 const res = await new proxy.$request(proxy.$urls.m().analysis).modeget()
-                // console.log(res)
+                console.log(res)
                 anaLysis.pieChart = res.data.data[0]
                 anaLysis.hisTogram = res.data.data[1]
                 anaLysis.lineChart = res.data.data[2]

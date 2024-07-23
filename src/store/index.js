@@ -15,3 +15,4 @@ export const goodsData = defineStore('goods_data',{
 		},
 	}
 })
+
