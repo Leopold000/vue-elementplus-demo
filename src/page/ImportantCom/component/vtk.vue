@@ -1,0 +1,466 @@
+<template>
+   <div>
+        <el-row :gutter="20">
+            <el-col :span="24">
+                <div class="grid-content">
+                    <div class="grid_title">有限元模型</div>
+                    <div class="controls">
+                    <label for="representation-select">Representation:</label>
+                      <select id="representation-select" ref="representationSelect" @change="updateRepresentation">
+                      <option value="1:2:0">Surface</option>
+                      <option value="1:1:1">Wireframe</option>
+                      <option value="1:0:1">Points</option>
+                      <option value="1:2:1">Surface with Edges</option> <!-- New option added -->
+                      </select>
+
+                      <label for="opacity-select">Opacity:</label>
+                      <input type="range" id="opacity-select" min="0" max="100" ref="opacitySelect" @input="updateOpacity" />
+                      <label for="colorby-select">Color By:</label>
+                      <select id="colorby-select" ref="colorbySelect" @change="updateColorBy"></select>
+                      <label for="component-select" style="display: none;">Component:</label>
+                      <select id="component-select" ref="componentSelect" style="display: none;" @change="updateColorByComponent"></select>
+                      <button @click="fetchNewCellData">更新数据</button>
+                    </div>
+                  <div class="vtk-container" ref="vtkContainer"></div>
+                </div>
+            </el-col>
+        </el-row>
+        
+     </div>
+  
+</template>
+
+<script>
+import axios from 'axios';
+import vtkXMLPolyDataReader from '@kitware/vtk.js/IO/XML/XMLPolyDataReader';
+import vtkInteractorStyleTrackballCamera from '@kitware/vtk.js/Interaction/Style/InteractorStyleTrackballCamera';
+import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer';
+import vtkRenderWindow from '@kitware/vtk.js/Rendering/Core/RenderWindow';
+import vtkRenderWindowInteractor from '@kitware/vtk.js/Rendering/Core/RenderWindowInteractor';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
+import vtkScalarBarActor from '@kitware/vtk.js/Rendering/Core/ScalarBarActor';
+import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
+import vtkColorMaps from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
+import vtkDataArray from '@kitware/vtk.js/Common/Core/DataArray';
+//import vtkCellData from '@kitware/vtk.js/Common/Core/CellData';
+// import vtkDoubleArray from '@kitware/vtk.js/Common/Core/
+import '@kitware/vtk.js/favicon';
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
+import '@kitware/vtk.js/Common/Core/StringArray';
+import '@kitware/vtk.js/Common/DataModel/PolyData';
+import '@kitware/vtk.js/Rendering/OpenGL/RenderWindow';
+import '@kitware/vtk.js/Rendering/WebGPU/RenderWindow';
+
+import { ColorMode, ScalarMode } from '@kitware/vtk.js/Rendering/Core/Mapper/Constants';
+// import { L } from '@kitware/vtk.js/macros2';
+
+export default {
+name: 'VtpView',
+data() {
+  return {
+    dataArrays: [],
+    selectedData: '',
+    selectedColorMap: 'rainbow',
+    lookupTable: null,
+    scalarBarActor: null,
+    polyData: null,
+    renderer: null,
+    vtuMapper: null,
+    vtuActor: null,
+    interactor: null,
+    renderWindow: null,
+    apiSpecificRenderWindow: null,
+    colorMode: ColorMode.MAP_SCALARS,
+    activeArray: null,
+  };
+},
+methods: {
+  initView() {
+    const vtkContainer = this.$refs.vtkContainer; // eslint-disable-line no-unused-vars
+    const userParams = vtkURLExtract.extractURLParameters(); // eslint-disable-line no-unused-vars
+    this.main();
+    window.addEventListener('resize', this.onResize);
+  },
+  main() {
+    this.initRenderer();
+    this.initInteractor();
+    this.initVtuSource();
+  },
+  onResize() {
+    const vtkContainer = this.$refs.vtkContainer;
+    // console.log("111")
+    const { width, height } = vtkContainer.getBoundingClientRect();
+    // console.log("e")
+    
+    this.apiSpecificRenderWindow.setSize(width, height);
+    this.render();
+  },
+  initRenderer() {
+    this.renderWindow = vtkRenderWindow.newInstance();
+    this.renderer = vtkRenderer.newInstance({ background: [0.1, 0.1, 0.1] });
+    this.renderer.getActiveCamera().setParallelProjection(true);
+    this.renderer.resetCamera();
+    this.renderWindow.addRenderer(this.renderer);
+
+    const userParams = vtkURLExtract.extractURLParameters();
+    this.apiSpecificRenderWindow = this.renderWindow.newAPISpecificView(userParams.viewAPI);
+    this.renderWindow.addView(this.apiSpecificRenderWindow);
+
+    const vtkContainer = this.$refs.vtkContainer;
+    this.apiSpecificRenderWindow.setContainer(vtkContainer);
+    const { width, height } = vtkContainer.getBoundingClientRect();
+    console.log(width, height)
+    this.apiSpecificRenderWindow.setSize(width, height);
+  },
+  initVtuSource() {
+    const reader = vtkXMLPolyDataReader.newInstance();
+    // Vtu/rotor1-ascii-3.vtp  Vtu/diskout.vtp
+    reader.setUrl('/Vtu/rotor1-ascii-3.vtp').then(() => {
+      reader.loadData().then(() => {
+        this.polyData = reader.getOutputData();
+        this.populateDataArrays();
+        this.selectedData = this.dataArrays[0];
+        this.initRendering();
+        this.initColorByOptions();
+      });
+    });
+  },
+  populateDataArrays() {
+    const cellData = this.polyData.getCellData();
+    const pointData = this.polyData.getPointData();
+    const cellArrayNames = Array.from({ length: cellData.getNumberOfArrays() }, (_, i) => cellData.getArrayByIndex(i).getName());
+    const pointArrayNames = Array.from({ length: pointData.getNumberOfArrays() }, (_, i) => pointData.getArrayByIndex(i).getName());
+
+    this.dataArrays = [...cellArrayNames, ...pointArrayNames];
+  },
+  initRendering() {
+    if (!this.selectedData) return;
+
+    const cellData = this.polyData.getCellData();
+    const pointData = this.polyData.getPointData();
+
+    let dataArray = cellData.getArrayByName(this.selectedData);
+    let scalarMode = ScalarMode.USE_CELL_DATA;
+
+    if (!dataArray) {
+      dataArray = pointData.getArrayByName(this.selectedData);
+      scalarMode = ScalarMode.USE_POINT_DATA;
+    }
+
+    if (!dataArray) {
+      console.error(`No data array named "${this.selectedData}" found.`);
+      return;
+    }
+
+    this.activeArray = dataArray;
+
+    const dataRange = dataArray.getRange();
+    console.log('updateRendering dataRange', dataRange);
+    this.initLookupTable(dataRange);
+    this.initMapper(this.selectedData, scalarMode);
+    this.initActor();
+    this.initScalarBar();
+    this.resetCamera();
+    this.render();
+  },
+  initLookupTable(dataRange) {
+    if (!this.lookupTable) {
+      this.lookupTable = vtkColorTransferFunction.newInstance();
+    }
+    const preset = vtkColorMaps.getPresetByName(this.selectedColorMap);
+    this.lookupTable.applyColorMap(preset);
+    this.lookupTable.setMappingRange(dataRange[0], dataRange[1]);
+    this.lookupTable.updateRange();
+  },
+  initMapper(arrayName, scalarMode) {
+    if (!this.vtuMapper) {
+      this.vtuMapper = vtkMapper.newInstance({
+        interpolateScalarsBeforeMapping: true,
+        useLookupTableScalarRange: true,
+        scalarVisibility: true,
+      });
+    }
+
+    this.vtuMapper.setInputData(this.polyData);
+    this.vtuMapper.setColorMode(this.colorMode);
+    this.vtuMapper.setScalarMode(scalarMode);
+    this.vtuMapper.setArrayAccessMode(1); // Use by name
+
+    const colorByArrayName = arrayName;
+    const newArray = this.polyData.getCellData().getArrayByName(colorByArrayName);
+    const newDataRange = newArray.getRange();
+    this.lookupTable.setMappingRange(newDataRange[0], newDataRange[1]);
+    this.lookupTable.updateRange();
+    this.vtuMapper.set({
+      colorByArrayName,
+      colorMode: ColorMode.MAP_SCALARS,
+      interpolateScalarsBeforeMapping: true,
+      scalarMode: ScalarMode.USE_CELL_FIELD_DATA,
+      scalarVisibility: true,
+    });
+  },
+  initActor() {
+    if (!this.vtuActor) {
+      this.vtuActor = vtkActor.newInstance();
+      this.vtuActor.setMapper(this.vtuMapper);
+      this.renderer.addActor(this.vtuActor);
+    }
+  },
+  initScalarBar() {
+    if (!this.scalarBarActor) {
+      this.scalarBarActor = vtkScalarBarActor.newInstance();
+      this.scalarBarActor.setScalarsToColors(this.lookupTable);
+      this.renderer.addActor(this.scalarBarActor);
+    }
+
+    this.scalarBarActor.setScalarsToColors(this.lookupTable);
+    this.scalarBarActor.setVisibility(true);
+  },
+  initInteractor() {
+    this.interactor = vtkRenderWindowInteractor.newInstance();
+    this.interactor.setView(this.apiSpecificRenderWindow);
+    this.interactor.initialize();
+    this.interactor.bindEvents(this.$refs.vtkContainer);
+
+    const interactorStyle = vtkInteractorStyleTrackballCamera.newInstance();
+    this.interactor.setInteractorStyle(interactorStyle);
+    this.renderer.resetCamera();
+  },
+  render() {
+    this.renderWindow.render();
+  },
+  resetCamera() {
+    this.renderer.resetCamera();
+  },
+  updateRepresentation(event) {
+    const [visibility, representation, edgeVisibility] = event.target.value.split(':').map(Number);
+    this.vtuActor.getProperty().set({ representation, edgeVisibility });
+    this.vtuActor.setVisibility(!!visibility);
+
+    // Handle "Surface with Edges" representation
+    if (representation === 2) { // Assuming 2 is the code for "Surface with Edges"
+      this.vtuActor.getProperty().setEdgeVisibility(true);
+    } else {
+      this.vtuActor.getProperty().setEdgeVisibility(edgeVisibility);
+    }
+
+    this.render();
+  },
+  updateOpacity(event) {
+    const opacity = Number(event.target.value) / 100;
+    this.vtuActor.getProperty().setOpacity(opacity);
+    this.render();
+  },
+  updateColorBy(event) {
+    const [location, colorByArrayName] = event.target.value.split(':');
+    const interpolateScalarsBeforeMapping = location === 'PointData';
+    let colorMode = ColorMode.DEFAULT;
+    let scalarMode = ScalarMode.DEFAULT;
+
+    const scalarVisibility = location.length > 0;
+    if (scalarVisibility) {
+      const newArray = this.polyData[`get${location}`]().getArrayByName(colorByArrayName);
+      this.activeArray = newArray;
+      const newDataRange = newArray.getRange();
+      console.log('newDataRange:', newDataRange);
+      const preset = vtkColorMaps.getPresetByName(this.selectedColorMap);
+      this.lookupTable.applyColorMap(preset);
+      this.lookupTable.setMappingRange(newDataRange[0], newDataRange[1]);
+      this.lookupTable.updateRange();
+
+      colorMode = ColorMode.MAP_SCALARS;
+      scalarMode = location === 'PointData' ? ScalarMode.USE_POINT_FIELD_DATA : ScalarMode.USE_CELL_FIELD_DATA;
+      const numberOfComponents = newArray.getNumberOfComponents();
+      if (numberOfComponents > 1) {
+        if (this.vtuMapper.getLookupTable()) {
+          const lut = this.vtuMapper.getLookupTable();
+          lut.setVectorModeToMagnitude();
+        }
+        this.$refs.componentSelect.style.display = 'block';
+        const compOpts = [['Magnitude', -1]];
+        while (compOpts.length <= numberOfComponents) {
+          compOpts.push([`Component ${compOpts.length}`, compOpts.length - 1]);
+        }
+        if (numberOfComponents === 3 || numberOfComponents === 4) {
+          compOpts.push(['Use direct mapping', -2]);
+        }
+        this.$refs.componentSelect.innerHTML = compOpts.map(t => `<option value="${t[1]}">${t[0]}</option>`).join('');
+      } else {
+        this.$refs.componentSelect.style.display = 'none';
+      }
+      this.scalarBarActor.setAxisLabel(colorByArrayName);
+      this.scalarBarActor.setVisibility(true);
+    } else {
+      this.$refs.componentSelect.style.display = 'none';
+      this.scalarBarActor.setVisibility(false);
+    }
+    const lookupTable = this.lookupTable;
+    this.vtuMapper.set({
+      lookupTable,
+      colorByArrayName,
+      colorMode,
+      interpolateScalarsBeforeMapping,
+      scalarMode,
+      scalarVisibility,
+    });
+    this.resetCamera();
+    this.render();
+  },
+  updateColorByComponent(event) {
+    if (this.vtuMapper.getLookupTable()) {
+      const lut = this.vtuMapper.getLookupTable();
+      this.vtuMapper.setColorModeToMapScalars();
+      if (event.target.value === '-2') {
+        this.vtuMapper.setColorModeToDirectScalars();
+      } else if (event.target.value === '-1') {
+        lut.setVectorModeToMagnitude();
+      } else {
+        lut.setVectorModeToComponent();
+        lut.setVectorComponent(Number(event.target.value));
+        const newDataRange = this.activeArray.getRange(Number(event.target.value));
+        this.lookupTable.setMappingRange(newDataRange[0], newDataRange[1]);
+        lut.updateRange();
+      }
+      this.resetCamera();
+      this.render();
+    }
+  },
+  initColorByOptions() {
+    const colorByOptions = [{ value: ':', label: 'Solid color' }].concat(
+      this.polyData.getPointData().getArrays().map(a => ({
+        label: `(p) ${a.getName()}`,
+        value: `PointData:${a.getName()}`,
+      })),
+      this.polyData.getCellData().getArrays().map(a => ({
+        label: `(c) ${a.getName()}`,
+        value: `CellData:${a.getName()}`,
+      }))
+    );
+
+    this.$refs.colorbySelect.innerHTML = colorByOptions.map(({ label, value }) => `<option value="${value}">${label}</option>`).join('');
+    this.updateColorBy({ target: this.$refs.colorbySelect });
+  },
+  fetchNewCellData() {
+    const requestData = {
+      TimeStamp: 1700624391, // 当前时间戳
+      SteamTemperature: 0.607764201105877,      // 示例值，根据需要调整
+      RotateSpeed: 0.941092669432918,          // 示例值，根据需要调整
+      HeatTransferCoe: 0.188218533886583,       // 示例值，根据需要调整
+      OilHTC: 0.992491602450108,                 // 示例值，根据需要调整
+      RotorIniTemp: 0.1375,           // 示例值，根据需要调整
+      StartStopFlag: 1.0            // 示例值，根据需要调整
+    };
+
+    axios.post('/api/SurrogateModel', requestData)
+      .then(response => {
+        const responseData = response.data;
+        const newStressData = this.jsonToCellData(responseData.matrixStress, 'Stress1');
+        const newTempData = this.jsonToCellData(responseData.matrixTemp, 'Temperature1');
+        //console.log("newStressData",newStressData.getNumberOfValues());
+        this.updateCellData(newStressData, newTempData);
+      })
+      .catch(error => {
+        console.error('Failed to fetch new cell data:', error);
+      });
+  },
+  jsonToCellData(jsonArray, name) {
+    //console.log("jsonArray:", jsonArray); // 打印 jsonArray
+
+    // 检查 jsonArray 是否为数组并且不为空
+    // if (!Array.isArray(jsonArray) || jsonArray.length === 0) {
+    //   console.error("Invalid jsonArray:", jsonArray);
+    //   return null;
+    // }
+
+    // 创建 Float64Array 并检查其值
+    const float64Array = new Float64Array(jsonArray);
+    //console.log("Float64Array:", float64Array);
+
+    // 检查 Float64Array 的范围
+    // const minValue = Math.min(...float64Array);
+    // const maxValue = Math.max(...float64Array);
+    // console.log(`Float64Array range: [${minValue}, ${maxValue}]`);
+
+    // Create vtkDataArray and set the data
+    const vtkData = vtkDataArray.newInstance({
+      name: name,
+      numberOfComponents: 1,
+      values: float64Array, // Use Float64Array for double data
+    });
+
+    return vtkData;
+  },
+  updateCellData(newStressData, newTempData) {
+    const cellData = this.polyData.getCellData();
+
+    //移除旧的 Stress 和 Temperature 数据
+    // cellData.removeArray('Stress');
+    // cellData.removeArray('Temperature');
+
+    // 添加新的 Stress 和 Temperature 数据
+    cellData.addArray(newStressData);
+    cellData.addArray(newTempData);
+
+    // 设置默认显示的数组
+    this.selectedData = 'Stress';
+    this.populateDataArrays();
+
+    // 重新初始化渲染
+    this.initRendering();
+    this.initColorByOptions();
+  },
+},
+mounted() {
+  this.initView();
+},
+};
+
+</script>
+
+<style scoped>
+.vtk-container {
+  width: 100%;
+  height: 600px;
+  overflow: hidden;
+}
+.grid-content{
+    background-color: #FFFFFF;
+}
+.grid_title{
+    font-weight: bold;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    margin-top: 20px;
+}
+.controls {
+/* position: absolute; */
+top: 10px;
+left: 10px;
+background: rgba(255, 255, 255, 0.8);
+padding: 10px;
+border-radius: 4px;
+z-index: 1;
+
+/* // Add this part to style select elements inline */
+display: flex;
+flex-wrap: wrap;
+align-items: center;
+
+select {
+  margin-left: 10px;
+}
+
+label {
+  margin-right: 10px;
+}
+}
+
+label {
+  margin-right: 10px;
+}
+</style>

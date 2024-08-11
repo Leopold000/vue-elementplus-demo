@@ -29,7 +29,7 @@ export default{
 
         //请求数据
         onMounted(()=>{
-            get_data()
+            // get_data()
         })
         async function get_data(){
             try{

@@ -8,6 +8,7 @@ const pinia = createPinia();
 import zhCn  from 'element-plus/es/locale/lang/zh-cn'
 import 'element-plus/dist/index.css'
 
+
 //全局引用css
 import '../style/headtap.css'
 
@@ -27,7 +28,7 @@ import tips from '../config/Tips'
 app.config.globalProperties.$tips = tips
 
 //mock引入
-import "@/mockjs/index"
+// import "@/mockjs/index"
 
 app.use(pinia)
 app.mount('#app')

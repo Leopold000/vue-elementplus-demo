@@ -1,17 +1,28 @@
 //放置所有的请求接口地址
 
 // const url = 'https://meituan.thexxdd.cn/apit/'
-    const url = '/'
+    const url = 'http://localhost:8090/'
 
 
 const urls = class{
     static m(){
+        //获取验证码
+        const getCaptcha = `${url}captcha`
         //注册接口
         const register = `${url}register`
         //登陆接口
         const login = `${url}login`
+        //test
+        const test =  `${url}test/pass`
+
+
         //用户信息
         const userInfo = `${url}userInfo`
+         //获取工况数据信息
+        const getcondition = `${url}getcondition`
+
+
+
         //用户列表
         const pulluserlist = `${url}pulluserlist`
         //获取桌号
@@ -51,9 +62,14 @@ const urls = class{
 
       
         return{
+            getCaptcha,
+            test,
             register,
             login,
             userInfo,
+            getcondition,
+
+            
             pulluserlist,
             gettable,
             obtainorder,

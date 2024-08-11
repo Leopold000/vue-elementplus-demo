@@ -13,8 +13,9 @@ let instance = axios.create({
 // 对token加密
 function baseFun(){
 	const token = localStorage.getItem('token')//从本地缓存里取出token
-	const base64 = Base64.encode(token + ':')//对token加密
-	return 'Basic ' + base64
+	// const base64 = Base64.encode(token + ':')//对token加密
+	// return 'Basic ' + base64
+	return token
 }
 
 // http拦截：是在axios请求发出之前给每一个接口携带token去后端校验身份
